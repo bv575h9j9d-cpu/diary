@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffd9e6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="糰糰日記">
+<title>糰糰減重日記</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Huninn&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: phone-width app, sticky header, five tabs on a bottom bar; a sky scene with the mascot leads the Today tab, sticker-style cards everywhere else */
+  --bg:#fdf1f6; --bg2:#e6f3ff; --card:#ffffff; --ink:#2a3050; --muted:#6a7499; --line:#e3e0f0;
+  --pink:#ff5f95; --mint:#1fb47f; --sun:#f5a800; --sky:#3d8ef5; --grape:#8a6cf0;
+  --pink-soft:#ffe3ec; --mint-soft:#d7f6e8; --sun-soft:#fff0c7; --sky-soft:#dcebff; --grape-soft:#ebe5ff;
+  --mochi:#fffaf3; --mochi-line:#2a2f45;
+  --shadow:0 5px 0 rgba(42,48,80,.08);
+  --f-display:"Huninn","jf-openhuninn","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-num:"Fredoka","Huninn",ui-rounded,system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#151a2e; --bg2:#101425; --card:#1e2644; --ink:#eef2ff; --muted:#a0abcc; --line:#313c66;
+    --pink:#ff86b0; --mint:#3fdaa4; --sun:#ffcc4d; --sky:#6aaeff; --grape:#a994ff;
+    --pink-soft:#40243a; --mint-soft:#163a31; --sun-soft:#3b3122; --sky-soft:#1d2e55; --grape-soft:#2c2757;
+    --shadow:0 5px 0 rgba(0,0,0,.28); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151a2e; --bg2:#101425; --card:#1e2644; --ink:#eef2ff; --muted:#a0abcc; --line:#313c66;
+  --pink:#ff86b0; --mint:#3fdaa4; --sun:#ffcc4d; --sky:#6aaeff; --grape:#a994ff;
+  --pink-soft:#40243a; --mint-soft:#163a31; --sun-soft:#3b3122; --sky-soft:#1d2e55; --grape-soft:#2c2757;
+  --shadow:0 5px 0 rgba(0,0,0,.28); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:linear-gradient(180deg,var(--bg),var(--bg2)) fixed; background-color:var(--bg);
+  color:var(--ink); font-family:var(--f-display); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+body::before{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 18%, var(--pink-soft) 0 90px, transparent 92px),
+    radial-gradient(circle at 92% 38%, var(--sun-soft) 0 70px, transparent 72px),
+    radial-gradient(circle at 8% 72%, var(--mint-soft) 0 80px, transparent 82px),
+    radial-gradient(circle at 88% 88%, var(--grape-soft) 0 100px, transparent 102px),
+    radial-gradient(var(--line) 1.4px, transparent 1.6px) 0 0/22px 22px;
+}
+.wrap{max-width:560px; margin:0 auto; padding:10px 16px 110px; display:flex; flex-direction:column; gap:16px}
+.view{display:flex; flex-direction:column; gap:16px}
+.view[hidden]{display:none}
+h1,h2,h3{font-weight:400; margin:0; text-wrap:balance}
+p{margin:0}
+.num{font-family:var(--f-num); font-weight:600; font-variant-numeric:tabular-nums}
+button{font:inherit; color:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--sky); outline-offset:2px; border-radius:12px}
+
+/* header */
+.top{position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 4px;
+  background:linear-gradient(180deg,var(--bg) 70%,transparent)}
+.top h1{font-size:22px} .top h1 b{color:var(--pink); font-weight:400}
+.chips{display:flex; gap:6px}
+.chip{display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:13px; background:var(--card); border:2px solid var(--line); white-space:nowrap}
+.chip.fire{border-color:var(--sun); background:var(--sun-soft)}
+.chip.lv{border-color:var(--grape); background:var(--grape-soft)}
+
+/* stage */
+.stage{position:relative; border-radius:32px; overflow:hidden; border:3px solid var(--card); box-shadow:0 0 0 2px var(--line), var(--shadow); padding:14px 14px 0;
+  background:linear-gradient(180deg,#9fd4ff,#dff2ff 70%); color:#2a3050}
+.stage.morning{background:linear-gradient(180deg,#ffd7b8,#cfe9ff 75%)}
+.stage.sunset{background:linear-gradient(180deg,#ff9f8a,#ffd9a8 70%)}
+.stage.night{background:linear-gradient(180deg,#1d2452,#4a4f96 80%)}
+.orb{position:absolute; top:14px; right:20px; width:46px; height:46px; border-radius:50%; background:#ffd84d; box-shadow:0 0 0 8px rgba(255,216,77,.3)}
+.night .orb{background:#fff6cf; box-shadow:inset -10px -4px 0 #d9d0a0, 0 0 0 8px rgba(255,246,207,.15)}
+.cloud{position:absolute; height:18px; width:60px; border-radius:99px; background:#fff; opacity:.85; animation:drift 30s linear infinite}
+.cloud::before{content:""; position:absolute; left:12px; top:-10px; width:26px; height:26px; border-radius:50%; background:#fff}
+.cloud::after{content:""; position:absolute; left:30px; top:-6px; width:20px; height:20px; border-radius:50%; background:#fff}
+.cloud.c1{top:26px; left:-70px} .cloud.c2{top:70px; left:-70px; transform:scale(.7); animation-duration:44s; animation-delay:-18s}
+.night .cloud{opacity:.25}
+.stars{position:absolute; inset:0; display:none; background:radial-gradient(#fff 1.2px,transparent 1.5px) 10px 12px/70px 54px, radial-gradient(#fff 1px,transparent 1.3px) 40px 30px/90px 66px; opacity:.7}
+.night .stars{display:block}
+@keyframes drift{to{transform:translateX(700px)}}
+.hill{position:absolute; left:-10%; right:-10%; bottom:-70px; height:130px; border-radius:50%; background:#8fdd9d}
+.night .hill{background:#3c7a66} .sunset .hill{background:#9bd47f}
+.scene{position:relative; display:grid; grid-template-columns:1fr 1.05fr; align-items:end; gap:4px}
+.bubble{position:relative; background:#fff; color:#2a3050; border:2.5px solid #2a3050; border-radius:20px; padding:10px 12px; font-size:15px; line-height:1.45; margin-bottom:60px; min-height:72px}
+.bubble::after{content:""; position:absolute; right:-12px; bottom:18px; width:16px; height:16px; background:#fff; border-right:2.5px solid #2a3050; border-bottom:2.5px solid #2a3050; transform:rotate(-45deg)}
+.bubble .tag{display:inline-block; font-size:12px; padding:1px 8px; border-radius:99px; background:var(--st,#1fb47f); color:#fff; margin-bottom:4px}
+#mochiBtn{background:none; border:0; padding:0; display:block; width:100%}
+#mochi{width:100%; height:auto; display:block; overflow:visible}
+#bodyG,#shadowE{transform-origin:110px 172px; transition:transform .7s cubic-bezier(.34,1.56,.64,1)}
+.eye,.blush{transition:transform .7s cubic-bezier(.34,1.56,.64,1)}
+#breathe{transform-origin:110px 172px; animation:breathe 3.2s ease-in-out infinite}
+.lid{transform-box:fill-box; transform-origin:center; animation:blink 4.6s infinite}
+.hop #jump{animation:hop .7s cubic-bezier(.3,.7,.4,1)}
+.running #jump{animation:hop .6s cubic-bezier(.3,.7,.4,1) infinite}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.025,.975)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes hop{0%{transform:translateY(0)}35%{transform:translateY(-34px)}65%{transform:translateY(0) scale(1.08,.92)}100%{transform:translateY(0)}}
+.xp{position:relative; margin:0 0 12px; background:rgba(255,255,255,.75); border-radius:16px; padding:8px 12px; display:flex; flex-direction:column; gap:4px; font-size:13px}
+.xp .r{display:flex; justify-content:space-between}
+.meter{height:10px; border-radius:99px; background:rgba(42,48,80,.12); overflow:hidden}
+.meter i{display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--grape),var(--pink)); transition:width .6s}
+
+/* panels */
+.panel{background:var(--card); border:2px solid var(--line); border-radius:26px; padding:16px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px}
+.panel h2{font-size:19px; display:flex; align-items:center; gap:8px}
+.panel h2 .dot{width:12px; height:12px; border-radius:50%; background:var(--pink); flex:none}
+.panel h2 .more{margin-left:auto; font-size:13px; color:var(--muted)}
+.hint{font-size:13px; color:var(--muted)}
+.btn{border:0; border-radius:16px; padding:11px 16px; background:var(--pink); color:#fff; font-size:16px; box-shadow:0 4px 0 rgba(0,0,0,.14); transition:transform .12s}
+.btn:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.14)}
+.btn.mint{background:var(--mint)} .btn.sun{background:var(--sun)} .btn.sky{background:var(--sky)} .btn.grape{background:var(--grape)}
+.btn.ghost{background:var(--bg); color:var(--ink); border:2px solid var(--line); box-shadow:none}
+.btn.sm{padding:7px 12px; font-size:14px; border-radius:12px}
+.btnrow{display:flex; gap:8px; flex-wrap:wrap} .btnrow .btn{flex:1}
+
+/* rings */
+.rings{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.ring{background:var(--card); border:2px solid var(--line); border-radius:22px; padding:10px 6px; text-align:center; box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; gap:2px}
+.ring svg{width:78px; height:78px} .ring circle{fill:none; stroke-width:9; stroke-linecap:round}
+.ring .arc{transition:stroke-dashoffset .7s cubic-bezier(.34,1.3,.64,1)}
+.ring .t{font-size:13px} .ring .s{font-size:11.5px; color:var(--muted); line-height:1.3}
+.ring text{font-family:var(--f-num); font-weight:600; font-size:17px; fill:var(--ink)}
+
+/* missions */
+.mission{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:14px; background:var(--bg); font-size:15px}
+.mission .ck{width:24px; height:24px; border-radius:50%; border:2.5px solid var(--line); flex:none; display:grid; place-items:center; color:#fff; font-size:14px}
+.mission.done{background:var(--mint-soft)} .mission.done .ck{background:var(--mint); border-color:var(--mint)}
+.mission .xpv{margin-left:auto; font-size:12px; color:var(--muted)}
+
+/* water */
+.cups{display:flex; flex-wrap:wrap; gap:6px}
+.cup{width:36px; height:44px; border:0; background:none; padding:0}
+.cup svg{width:100%; height:100%}
+.cup .w{fill:var(--line); transition:fill .3s} .cup.on .w{fill:var(--sky)}
+.cup:active{transform:scale(.88)}
+
+/* lists */
+.list{display:flex; flex-direction:column; gap:6px}
+.item{display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--bg); border-radius:14px; font-size:15px}
+.item .e{font-size:20px; width:26px; text-align:center}
+.item .k{margin-left:auto; white-space:nowrap}
+.item .k small{font-family:var(--f-display); font-weight:400; font-size:11px; color:var(--muted)}
+.item .x{border:0; background:none; color:var(--muted); font-size:18px; padding:0 4px}
+.empty{font-size:14px; color:var(--muted); background:var(--bg); border-radius:14px; padding:12px; text-align:center}
+
+/* body tab */
+.row{display:flex; flex-direction:column; gap:6px}
+.row-top{display:flex; justify-content:space-between; align-items:center; gap:10px}
+.readout{display:flex; align-items:baseline; gap:4px}
+.readout input, .field{width:84px; text-align:right; border:2px solid var(--line); border-radius:12px; background:var(--bg); color:var(--ink); padding:3px 8px; font-family:var(--f-num); font-weight:600; font-size:20px}
+.field.txt{width:100%; text-align:left; font-family:var(--f-display); font-weight:400; font-size:16px; padding:8px 10px}
+.readout span{font-size:13px; color:var(--muted)}
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:30px; background:transparent; margin:0; --c:var(--pink); --p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:12px; border-radius:99px; background:linear-gradient(90deg,var(--c) var(--p),var(--line) var(--p))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:30px; height:30px; margin-top:-9px; border-radius:50%; background:#fff; border:5px solid var(--c); box-shadow:0 3px 0 rgba(0,0,0,.15)}
+input[type=range]::-moz-range-track{height:12px; border-radius:99px; background:var(--line)}
+input[type=range]::-moz-range-progress{height:12px; border-radius:99px; background:var(--c)}
+input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:5px solid var(--c)}
+.seg{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.seg button{border:2px solid var(--line); background:var(--bg); border-radius:16px; padding:10px; font-size:16px}
+.seg button[aria-pressed="true"]{background:var(--pink-soft); border-color:var(--pink)}
+.stepper{display:flex; align-items:center; gap:8px}
+.stepper button{width:38px; height:38px; border-radius:50%; border:2px solid var(--line); background:var(--bg); font-size:20px; line-height:1}
+.stepper input{width:64px}
+.acts{display:grid; grid-template-columns:repeat(5,1fr); gap:6px}
+.acts button{border:2px solid var(--line); background:var(--bg); border-radius:14px; padding:8px 2px 6px; font-size:14px; display:flex; flex-direction:column; align-items:center; gap:4px}
+.acts .bars{display:flex; gap:2px; align-items:flex-end; height:14px}
+.acts .bars i{display:block; width:4px; border-radius:2px; background:var(--line)} .acts .bars i.on{background:var(--muted)}
+.acts button[aria-pressed="true"]{border-color:var(--mint); background:var(--mint-soft)}
+.acts button[aria-pressed="true"] .bars i.on{background:var(--mint)}
+.stickers{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.sticker{border-radius:22px; padding:14px 14px 12px; border:3px solid var(--card); box-shadow:0 0 0 2px var(--line), var(--shadow); display:flex; flex-direction:column; gap:2px; transform:rotate(var(--r,0deg))}
+.sticker .lbl{font-size:14px} .sticker .big{font-size:28px; line-height:1.1; white-space:nowrap}
+.sticker .big small{font-size:13px; font-family:var(--f-display); font-weight:400; margin-left:3px; color:var(--muted)}
+.sticker .sub{font-size:12.5px; color:var(--muted); line-height:1.4}
+.s-bmi{grid-column:1/-1; background:var(--card); --r:-.6deg} .s-bmr{background:var(--pink-soft); --r:1.2deg} .s-tdee{background:var(--sun-soft); --r:-1.2deg}
+.s-ideal{background:var(--mint-soft); --r:-1deg} .s-ideal .big{font-size:22px} .s-water{background:var(--sky-soft); --r:1deg}
+.bmi-head{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.pill{display:inline-flex; align-items:center; padding:2px 10px; border-radius:99px; font-size:13px; color:#fff; background:var(--st, var(--mint)); white-space:nowrap}
+.gauge{position:relative; margin:12px 0 22px}
+.gauge .track{display:flex; height:14px; border-radius:99px; overflow:hidden} .gauge .track i{display:block; height:100%}
+.gauge .marker{position:absolute; top:-7px; width:26px; height:26px; margin-left:-13px; border-radius:50%; background:#fff; border:5px solid var(--ink); transition:left .6s cubic-bezier(.34,1.56,.64,1)}
+.gauge .ticks{position:absolute; left:0; right:0; top:18px; font-size:11px; color:var(--muted)} .gauge .ticks span{position:absolute; transform:translateX(-50%)}
+.summary{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.summary div{background:var(--bg); border-radius:16px; padding:10px 6px; text-align:center; display:flex; flex-direction:column; gap:2px}
+.summary .k{font-size:12px; color:var(--muted)} .summary .v{font-size:21px; line-height:1.15}
+.summary .v small{font-size:12px; font-family:var(--f-display); font-weight:400; color:var(--muted)}
+.split-labels{display:flex; justify-content:space-between; font-size:14px} .split-labels b{font-family:var(--f-num); font-weight:600}
+.intake{border-radius:22px; padding:14px; background:var(--sun-soft); display:flex; justify-content:space-between; align-items:center; gap:10px}
+.intake .v{font-size:34px; line-height:1} .intake .v small{font-size:14px; font-family:var(--f-display); font-weight:400; color:var(--muted)}
+.warns{display:flex; flex-direction:column; gap:8px}
+.warn{border-left:6px solid var(--pink); background:var(--pink-soft); border-radius:12px; padding:8px 12px; font-size:14px}
+.warn.ok{border-color:var(--mint); background:var(--mint-soft)}
+
+/* move tab */
+.timer{display:flex; flex-direction:column; align-items:center; gap:10px; background:var(--mint-soft); border-radius:24px; padding:16px}
+.timer svg{width:190px; height:190px} .timer circle{fill:none; stroke-width:12; stroke-linecap:round}
+.timer .clock{font-size:40px; fill:var(--ink)} .timer .sub{font-size:13px; fill:var(--muted); font-family:var(--f-display)}
+.exlist{display:flex; flex-direction:column; gap:6px}
+.ex{display:grid; grid-template-columns:88px 1fr 76px; align-items:center; gap:10px; border:2px solid transparent; background:none; border-radius:14px; padding:6px 8px; text-align:left}
+.ex[aria-pressed="true"]{border-color:var(--mint); background:var(--mint-soft)}
+.ex .n{font-size:15px; line-height:1.2} .ex .n small{display:block; font-size:11px; color:var(--muted)}
+.ex .bar{height:12px; background:var(--line); border-radius:99px; overflow:hidden}
+.ex .bar i{display:block; height:100%; border-radius:99px; background:var(--mint); transition:width .5s}
+.ex .m{text-align:right; font-size:16px} .ex .m small{font-size:11px; font-family:var(--f-display); font-weight:400; color:var(--muted)}
+.boba{display:flex; gap:14px; align-items:center; background:var(--sun-soft); border-radius:22px; padding:14px; font-size:15px}
+.boba .big{font-size:36px} .boba .num{font-size:20px; color:var(--pink)}
+
+/* log tab */
+.chart{width:100%; height:auto; display:block}
+.chart text{font-family:var(--f-num); font-size:11px; fill:var(--muted)} .chart .lab{font-size:12.5px; fill:var(--ink); font-weight:600}
+.legend{display:flex; gap:14px; font-size:12.5px; color:var(--muted); flex-wrap:wrap}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px}
+.prog{display:flex; flex-direction:column; gap:6px}
+.prog .meter{height:16px; background:var(--line)} .prog .meter i{background:linear-gradient(90deg,var(--mint),var(--sky))}
+.prog .r{display:flex; justify-content:space-between; font-size:13px; color:var(--muted)}
+.cal{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; text-align:center; font-size:12px}
+.cal .hd{color:var(--muted)}
+.cal .d{aspect-ratio:1; border-radius:12px; background:var(--bg); display:grid; place-items:center; font-family:var(--f-num); font-weight:600; font-size:13px; color:var(--muted)}
+.cal .d.has{background:var(--sun-soft); color:var(--ink)} .cal .d.full{background:var(--mint); color:#fff}
+.cal .d.today{outline:2.5px solid var(--pink); outline-offset:1px}
+
+/* me tab */
+.stats{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.stat{border-radius:18px; padding:12px; display:flex; flex-direction:column}
+.stat .v{font-size:26px; line-height:1.1} .stat .v small{font-size:12px; font-family:var(--f-display); font-weight:400; color:var(--muted)}
+.stat .k{font-size:13px; color:var(--muted)}
+.badges{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.badge{border-radius:18px; padding:10px 4px; text-align:center; background:var(--bg); border:2px dashed var(--line); display:flex; flex-direction:column; align-items:center; gap:2px}
+.badge .e{font-size:28px; filter:grayscale(1); opacity:.35} .badge .n{font-size:13px} .badge .d{font-size:11px; color:var(--muted); line-height:1.3}
+.badge.on{background:var(--sun-soft); border:2px solid var(--sun)} .badge.on .e{filter:none; opacity:1}
+textarea.field{width:100%; height:90px; text-align:left; font-family:ui-monospace,monospace; font-size:11px; font-weight:400; resize:vertical}
+
+/* tab bar */
+.tabbar{position:fixed; left:0; right:0; bottom:0; z-index:30; display:flex; justify-content:center; padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px)); pointer-events:none}
+.tabbar nav{pointer-events:auto; width:100%; max-width:528px; display:grid; grid-template-columns:repeat(5,1fr); background:var(--card); border:2px solid var(--line); border-radius:24px; box-shadow:0 6px 18px rgba(42,48,80,.18); padding:6px}
+.tabbar a{display:flex; flex-direction:column; align-items:center; gap:1px; text-decoration:none; color:var(--muted); font-size:12px; padding:6px 0; border-radius:16px}
+.tabbar a svg{width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round}
+.tabbar a[aria-current="page"]{background:var(--pink-soft); color:var(--pink)}
+
+/* sheet, toast, confetti */
+.sheet{position:fixed; inset:0; z-index:50; display:flex; align-items:flex-end; justify-content:center; background:rgba(20,24,45,.45)}
+.sheet[hidden]{display:none}
+.sheet .box{width:100%; max-width:560px; max-height:86%; overflow:auto; background:var(--card); border-radius:28px 28px 0 0; padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:14px; animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px); opacity:.5}}
+.sheet h3{font-size:20px; display:flex; justify-content:space-between; align-items:center}
+.sheet h3 button{border:0; background:var(--bg); width:34px; height:34px; border-radius:50%; font-size:18px}
+.foods{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.food{display:flex; align-items:center; gap:8px; border:2px solid var(--line); background:var(--bg); border-radius:14px; padding:8px 10px; font-size:14px; text-align:left; line-height:1.25}
+.food:active{transform:scale(.96); border-color:var(--sun)} .food .e{font-size:22px} .food small{display:block; color:var(--muted); font-size:11.5px}
+.pick{display:flex; flex-wrap:wrap; gap:6px}
+.pick button{border:2px solid var(--line); background:var(--bg); border-radius:99px; padding:6px 12px; font-size:14px}
+.pick button[aria-pressed="true"]{border-color:var(--mint); background:var(--mint-soft)}
+.bigval{text-align:center; font-size:44px; line-height:1} .bigval small{font-size:15px; font-family:var(--f-display); font-weight:400; color:var(--muted)}
+.wstep{display:flex; justify-content:center; gap:8px}
+.toast{position:fixed; left:50%; bottom:96px; transform:translateX(-50%); z-index:60; background:var(--ink); color:var(--card); padding:9px 16px; border-radius:99px; font-size:14px; white-space:nowrap; max-width:92vw; overflow:hidden; text-overflow:ellipsis; transition:opacity .3s; pointer-events:none}
+.toast[hidden]{display:block; opacity:0}
+#confetti{position:fixed; inset:0; width:100%; height:100%; z-index:70; pointer-events:none}
+footer{font-size:12.5px; color:var(--muted); line-height:1.6; padding:0 6px; display:flex; flex-direction:column; gap:6px}
+
+@media (max-width:380px){ .acts{grid-template-columns:repeat(3,1fr)} .ex{grid-template-columns:76px 1fr 66px} .top h1{font-size:19px} .ring svg{width:66px;height:66px} }
+@media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none!important; transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>糰糰<b>減重</b>日記</h1>
+    <div class="chips"><span class="chip fire" id="chipStreak">連續 0 天</span><span class="chip lv" id="chipLv">Lv.1</span></div>
+  </header>
+
+  <!-- ============ TODAY ============ -->
+  <section class="view" id="v-today">
+    <div class="stage" id="stage">
+      <div class="stars"></div><div class="orb"></div><div class="cloud c1"></div><div class="cloud c2"></div><div class="hill"></div>
+      <div class="scene">
+        <div class="bubble" aria-live="polite"><span class="tag" id="bTag">BMI</span><br><span id="bText"></span></div>
+        <button id="mochiBtn" type="button" aria-label="戳一下糰糰">
+          <svg id="mochi" viewBox="0 0 220 190" aria-hidden="true">
+            <ellipse id="shadowE" cx="110" cy="180" rx="66" ry="7" fill="#2a3050" opacity=".15"/>
+            <g id="jump"><g id="breathe">
+              <g id="bodyG">
+                <path d="M110 46 C164 46 182 96 182 130 C182 162 152 174 110 174 C68 174 38 162 38 130 C38 96 56 46 110 46 Z" fill="var(--mochi)" stroke="var(--mochi-line)" stroke-width="4.5" stroke-linejoin="round"/>
+                <path d="M62 150 C78 164 142 164 158 150" fill="none" stroke="#f1e3d3" stroke-width="5" stroke-linecap="round"/>
+              </g>
+              <path d="M110 47 C110 38 110 32 112 26" stroke="var(--mochi-line)" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <path d="M112 28 C120 14 138 14 142 20 C134 30 122 32 112 28 Z" fill="#43c98f" stroke="var(--mochi-line)" stroke-width="3.5" stroke-linejoin="round"/>
+              <path d="M111 30 C104 20 90 20 86 25 C92 33 103 34 111 30 Z" fill="#7fe0b2" stroke="var(--mochi-line)" stroke-width="3.5" stroke-linejoin="round"/>
+              <g id="accBand" style="display:none"><path d="M66 78 Q110 60 154 78 L157 90 Q110 72 63 90 Z" fill="#ff5f95" stroke="var(--mochi-line)" stroke-width="3.5" stroke-linejoin="round"/></g>
+              <g id="accStar" style="display:none"><path d="M160 52 l5 11 12 1 -9 8 3 12 -11 -6 -11 6 3 -12 -9 -8 12 -1 Z" fill="#ffd84d" stroke="var(--mochi-line)" stroke-width="3" stroke-linejoin="round"/></g>
+              <g class="blush" id="blushL"><ellipse cx="72" cy="132" rx="11" ry="6.5" fill="#ff9dbb" opacity=".75"/></g>
+              <g class="blush" id="blushR"><ellipse cx="148" cy="132" rx="11" ry="6.5" fill="#ff9dbb" opacity=".75"/></g>
+              <g class="eye" id="eyeL"><g class="lid"><ellipse cx="88" cy="114" rx="7" ry="9" fill="var(--mochi-line)"/><circle cx="90.5" cy="110" r="2.6" fill="#fff"/></g></g>
+              <g class="eye" id="eyeR"><g class="lid"><ellipse cx="132" cy="114" rx="7" ry="9" fill="var(--mochi-line)"/><circle cx="134.5" cy="110" r="2.6" fill="#fff"/></g></g>
+              <path id="mouth" d="M98 128 Q110 142 122 128" fill="none" stroke="var(--mochi-line)" stroke-width="4" stroke-linecap="round"/>
+            </g></g>
+          </svg>
+        </button>
+      </div>
+      <div class="xp"><div class="r"><span id="lvName">Lv.1 小糰子</span><span class="num" id="xpTxt">0 / 100 XP</span></div><div class="meter"><i id="xpBar" style="width:0%"></i></div></div>
+    </div>
+    <div id="todayDyn" class="view"></div>
+  </section>
+
+  <!-- ============ BODY ============ -->
+  <section class="view" id="v-body" hidden>
+    <div class="panel">
+      <h2><span class="dot"></span>關於你</h2>
+      <div class="seg" role="group" aria-label="性別">
+        <button type="button" id="sexF" aria-pressed="true">女生</button>
+        <button type="button" id="sexM" aria-pressed="false">男生</button>
+      </div>
+      <div class="row"><div class="row-top"><label for="ageN">年齡</label>
+        <div class="stepper"><button type="button" id="ageMinus" aria-label="年齡減一">−</button>
+          <div class="readout"><input id="ageN" type="number" inputmode="numeric" min="18" max="80"><span>歲</span></div>
+          <button type="button" id="agePlus" aria-label="年齡加一">+</button></div></div></div>
+      <div class="row"><div class="row-top"><label for="hR">身高</label><div class="readout"><input id="hN" type="number" inputmode="decimal" min="130" max="210" step="0.5" aria-label="身高數字"><span>公分</span></div></div>
+        <input id="hR" type="range" min="130" max="210" step="0.5" style="--c:var(--sky)"></div>
+      <div class="row"><div class="row-top"><label for="wR">目前體重</label><div class="readout"><input id="wN" type="number" inputmode="decimal" min="30" max="180" step="0.1" aria-label="體重數字"><span>公斤</span></div></div>
+        <input id="wR" type="range" min="30" max="180" step="0.5"></div>
+      <div class="row"><div class="row-top"><span>平常活動量</span></div><div class="acts" id="acts" role="group" aria-label="活動量"></div><p class="hint" id="actDesc"></p></div>
+    </div>
+
+    <div class="stickers">
+      <div class="sticker s-bmi">
+        <div class="bmi-head"><span class="lbl">BMI 身體質量指數</span><span class="pill" id="bmiPill">正常</span></div>
+        <div class="big num" id="bmiV">22.0</div>
+        <div class="gauge" aria-hidden="true">
+          <div class="track"><i style="width:21.43%;background:var(--sky)"></i><i style="width:26.19%;background:var(--mint)"></i><i style="width:14.29%;background:var(--sun)"></i><i style="width:38.09%;background:var(--pink)"></i></div>
+          <div class="marker" id="bmiMarker" style="left:50%"></div>
+          <div class="ticks"><span style="left:21.43%">18.5</span><span style="left:47.62%">24</span><span style="left:61.9%">27</span></div>
+        </div>
+        <div class="sub">台灣標準：18.5 以下過輕、18.5–24 正常、24–27 過重、27 以上肥胖</div>
+      </div>
+      <div class="sticker s-bmr"><span class="lbl">基礎代謝率 BMR</span><span class="big num" id="bmrV"></span><span class="sub">整天躺著不動也會燒掉的熱量</span></div>
+      <div class="sticker s-tdee"><span class="lbl">每日總消耗 TDEE</span><span class="big num" id="tdeeV"></span><span class="sub">加上活動量，一天實際消耗</span></div>
+      <div class="sticker s-ideal"><span class="lbl">健康體重範圍</span><span class="big num" id="idealV"></span><span class="sub" id="idealSub"></span></div>
+      <div class="sticker s-water"><span class="lbl">每天建議喝水</span><span class="big num" id="waterV"></span><span class="sub" id="waterSub"></span></div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--sun)"></span>減重計畫</h2>
+      <div class="row"><div class="row-top"><label for="tR">目標體重</label><div class="readout"><input id="tN" type="number" inputmode="decimal" min="30" step="0.5" aria-label="目標體重數字"><span>公斤</span></div></div>
+        <input id="tR" type="range" min="30" step="0.5" style="--c:var(--sun)"></div>
+      <div class="row"><div class="row-top"><label for="wkR">想花多久</label><div class="readout"><input id="wkN" type="number" inputmode="numeric" min="2" max="52" aria-label="週數"><span>週</span></div></div>
+        <input id="wkR" type="range" min="2" max="52" step="1" style="--c:var(--sun)"></div>
+      <div class="summary">
+        <div><span class="k">還要減</span><span class="v num" id="loseV"></span></div>
+        <div><span class="k">每週減</span><span class="v num" id="weeklyV"></span></div>
+        <div><span class="k">每天熱量缺口</span><span class="v num" id="defV"></span></div>
+      </div>
+      <div class="row"><div class="row-top"><label for="splitR">熱量缺口怎麼分配？</label></div>
+        <input id="splitR" type="range" min="0" max="100" step="5" style="--c:var(--mint)">
+        <div class="split-labels"><span>少吃 <b id="dietK">0</b> 大卡</span><span>多動 <b id="exK">0</b> 大卡</span></div></div>
+      <div class="intake"><div><div style="font-size:14px">每天建議吃</div><div class="v num" id="intakeV"></div></div><span class="pill" id="ratePill">溫和</span></div>
+      <div class="warns" id="warns"></div>
+      <p class="hint" id="planNote"></p>
+    </div>
+  </section>
+
+  <section class="view" id="v-move" hidden></section>
+  <section class="view" id="v-log" hidden></section>
+  <section class="view" id="v-me" hidden></section>
+
+  <footer>
+    <p>計算方式：BMI 採衛福部國健署成人標準；基礎代謝用 Mifflin-St Jeor 公式；1 公斤脂肪約 7,700 大卡；運動消耗依 MET 值估算；食物熱量為常見份量的概估值。</p>
+    <p>所有數字都是估算，適用 18 歲以上成人。懷孕、哺乳、有慢性病或正在服藥的人，開始減重前請先問醫師或營養師。紀錄只存在這台裝置的瀏覽器裡。</p>
+  </footer>
+</div>
+
+<div class="tabbar"><nav aria-label="分頁">
+  <a href="#today" data-tab="today"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>今天</a>
+  <a href="#body" data-tab="body"><svg viewBox="0 0 24 24"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/></svg>身體</a>
+  <a href="#move" data-tab="move"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>運動</a>
+  <a href="#log" data-tab="log"><svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 15l4-5 3 3 5-7"/></svg>紀錄</a>
+  <a href="#me" data-tab="me"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.2 6-5.5-3-5.5 3 1.2-6L3.200 9.400l6.1-.8z"/></svg>成就</a>
+</nav></div>
+
+<div class="sheet" id="sheet" hidden><div class="box" id="sheetBox" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<canvas id="confetti"></canvas>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const fmt=n=>Math.round(n).toLocaleString('zh-TW');
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='tuantuan-diary-v2';
+const dk=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const pd=k=>{const a=k.split('-').map(Number); return new Date(a[0],a[1]-1,a[2]);};
+const today=()=>dk(new Date());
+const addDays=(k,n)=>{const d=pd(k); d.setDate(d.getDate()+n); return dk(d);};
+const diffDays=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
+const md=k=>{const d=pd(k); return (d.getMonth()+1)+'/'+d.getDate();};
+
+function fresh(){return {v:2,profile:{sex:'f',age:28,h:160,w:65,act:1.375},plan:{target:58,weeks:12,split:50,ex:'walk',start:today(),startW:65},logs:{},weights:[],badges:{},timerDone:0};}
+let S=fresh();
+function adopt(o){ if(!o||typeof o!=='object'||!o.profile||!o.plan) return false;
+  const f=fresh(); S={v:2,profile:Object.assign(f.profile,o.profile),plan:Object.assign(f.plan,o.plan),logs:(o.logs&&typeof o.logs==='object')?o.logs:{},weights:Array.isArray(o.weights)?o.weights:[],badges:o.badges||{},timerDone:o.timerDone||0}; return true; }
+try{ const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(!adopt(s)){ const o=JSON.parse(localStorage.getItem('tuantuan-calc-v1')||'null');
+  if(o&&o.h){ Object.assign(S.profile,{sex:o.sex,age:o.age,h:o.h,w:o.w,act:o.act}); Object.assign(S.plan,{target:o.target,weeks:o.weeks,split:o.split,ex:o.ex,startW:o.w}); } } }catch(e){}
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+
+const ACTS=[{v:1.2,n:'久坐',d:'久坐：辦公室為主，幾乎不運動'},{v:1.375,n:'輕度',d:'輕度：每週運動 1–3 天'},{v:1.55,n:'中度',d:'中度：每週運動 3–5 天'},{v:1.725,n:'高度',d:'高度：每週運動 6–7 天'},{v:1.9,n:'超高',d:'超高：勞力工作，或一天練兩次'}];
+const EX=[{id:'walk',n:'快走',s:'時速約 5.6 km',met:4.3,e:'🚶'},{id:'jog',n:'慢跑',s:'時速約 8 km',met:8.3,e:'🏃'},{id:'bike',n:'騎腳踏車',s:'時速 16–19 km',met:6.8,e:'🚴'},{id:'swim',n:'游泳',s:'自由式・輕鬆',met:5.8,e:'🏊'},{id:'rope',n:'跳繩',s:'中等速度',met:11.8,e:'🪢'},{id:'stairs',n:'爬樓梯',s:'快步',met:8.8,e:'🪜'},{id:'dance',n:'有氧舞蹈',s:'一般強度',met:7.3,e:'💃'},{id:'badm',n:'羽球',s:'休閒打',met:5.5,e:'🏸'},{id:'weights',n:'重量訓練',s:'一般強度',met:3.5,e:'🏋️'},{id:'yoga',n:'瑜珈',s:'哈達瑜珈',met:2.5,e:'🧘'}];
+const FOODS=[['🍚','白飯一碗',280],['🍱','雞腿便當',800],['🍛','滷肉飯（小）',400],['🍜','牛肉麵',650],['🥟','水餃 10 顆',500],['🥞','蛋餅',270],['🥪','鮪魚蛋吐司',350],['🍙','超商飯糰',210],['🥚','茶葉蛋',75],['🥛','無糖豆漿',135],['🧋','大杯全糖珍奶',650],['🍵','無糖茶',0],['☕','拿鐵（中杯）',180],['🍗','炸雞排',600],['🍟','鹽酥雞一份',550],['🍠','地瓜一條',180],['🍌','香蕉',100],['🍎','蘋果',80],['🥗','雞胸沙拉',300],['🥬','燙青菜',60],['🍝','泡麵',450],['🍰','蛋糕一片',350]];
+const ST={under:{n:'過輕',c:'#3d8ef5',msg:'你有點太瘦囉！先把營養顧好、練點肌肉更重要～',mouth:'M102 131 Q110 136 118 131'},normal:{n:'正常',c:'#1fb47f',msg:'比例剛剛好！想再雕塑一下，慢慢來就好。',mouth:'M97 126 Q110 144 123 126'},over:{n:'過重',c:'#e09a00',msg:'一起動起來！每週瘦 0.5 公斤就超厲害。',mouth:'M99 128 Q110 140 121 128'},obese:{n:'肥胖',c:'#ff5f95',msg:'不用急，糰糰陪你一步一步來！',mouth:'M100 129 Q110 138 120 129'}};
+const CHEERS=['戳我幹嘛啦～','今天水喝夠了嗎？','走路也算運動喔！','全糖換微糖，一杯少 200 大卡','肌肉越多，基礎代謝越高','睡飽一點，比較不會嘴饞','搭電梯不如爬兩層樓梯','你今天也很棒！','體重會上下跳，看一週平均就好','吃慢一點，比較容易飽'];
+const LV=['小糰子','活力糰','元氣糰','閃亮糰','傳說糰'];
+const BADGES=[
+ ['first','🌱','第一步','記下第一筆紀錄',s=>s.days>=1],['w1','💧','水水的','喝水達標 1 天',s=>s.waterDays>=1],['w7','🌊','水庫滿了','喝水達標 7 天',s=>s.waterDays>=7],
+ ['s3','🔥','三天不打魚','連續紀錄 3 天',s=>s.best>=3],['s7','⚡','一週達人','連續紀錄 7 天',s=>s.best>=7],['s30','👑','習慣養成','連續紀錄 30 天',s=>s.best>=30],
+ ['e60','👟','動起來','累計運動 60 分鐘',s=>s.exMin>=60],['e600','🏅','運動健將','累計運動 600 分鐘',s=>s.exMin>=600],['tm','⏱️','計時完成','用計時器完成一次',s=>s.timer>=1],
+ ['f10','🍽️','飲食偵探','記錄 10 筆飲食',s=>s.foods>=10],['wt7','⚖️','誠實面對','記錄體重 7 次',s=>s.weighs>=7],['all','🌈','完美的一天','一天完成全部任務',s=>s.perfect>=1],
+ ['l1','🎈','輕了 1 公斤','比起點少 1 公斤',s=>s.lost>=1],['l3','🎉','輕了 3 公斤','比起點少 3 公斤',s=>s.lost>=3],['goal','🏆','達成目標','抵達目標體重',s=>s.goal]
+];
+
+/* ---------- core numbers ---------- */
+function calc(){
+  const p=S.profile, pl=S.plan, h2=(p.h/100)**2, bmi=p.w/h2;
+  const stKey=bmi<18.5?'under':bmi<24?'normal':bmi<27?'over':'obese';
+  const bmr=10*p.w+6.25*p.h-5*p.age+(p.sex==='m'?5:-161), tdee=bmr*p.act;
+  const lose=Math.max(0,p.w-pl.target);
+  const remDays=Math.max(7,pl.weeks*7-Math.max(0,diffDays(pl.start,today())));
+  const def=lose*7700/remDays, exK=def*pl.split/100, dietK=def-exK, intake=tdee-dietK;
+  const waterMl=p.w*30, cups=clamp(Math.round(waterMl/250),4,14);
+  return {bmi,stKey,st:ST[stKey],bmr,tdee,h2,lose,remDays,weekly:lose/(remDays/7),def,exK,dietK,intake,waterMl,cups,floor:p.sex==='m'?1500:1200};
+}
+const perMin=x=>(x.met-1)*3.5*S.profile.w/200;
+const exById=id=>EX.find(x=>x.id===id)||EX[0];
+function day(k){ return S.logs[k]||(S.logs[k]={water:0,foods:[],exs:[]}); }
+function peek(k){ return S.logs[k]||{water:0,foods:[],exs:[]}; }
+const sumK=a=>a.reduce((t,x)=>t+(+x.k||0),0);
+const sumMin=a=>a.reduce((t,x)=>t+(+x.min||0),0);
+const weightOn=k=>S.weights.find(x=>x.d===k);
+function missions(k,c){ const L=peek(k); return [
+  {t:'喝水 '+c.cups+' 杯',done:L.water>=c.cups,p:L.water+'/'+c.cups},
+  {t:'記錄今天吃了什麼',done:L.foods.length>0,p:L.foods.length+' 筆'},
+  {t:'運動 20 分鐘',done:sumMin(L.exs)>=20,p:sumMin(L.exs)+' 分'},
+  {t:'量體重',done:!!weightOn(k),p:weightOn(k)?f1(weightOn(k).w)+' kg':''}]; }
+const hasLog=k=>{const L=S.logs[k]; return !!((L&&(L.water>0||L.foods.length||L.exs.length))||weightOn(k));};
+function stats(c){
+  const keys=new Set(Object.keys(S.logs).concat(S.weights.map(x=>x.d)));
+  let s={days:0,waterDays:0,cupsTotal:0,exMin:0,foods:0,perfect:0,xp:0,weighs:S.weights.length,timer:S.timerDone||0};
+  const act=[...keys].filter(hasLog).sort();
+  act.forEach(k=>{ const L=peek(k), m=missions(k,c), em=sumMin(L.exs); s.days++; s.cupsTotal+=L.water; s.exMin+=em; s.foods+=L.foods.length;
+    if(L.water>=c.cups) s.waterDays++; const all=m.every(x=>x.done); if(all) s.perfect++;
+    s.xp+=Math.min(L.water,c.cups)*2+Math.min(L.foods.length,5)*3+Math.min(em,60)+(weightOn(k)?10:0)+(all?20:0); });
+  let best=0,run=0,prev=null; act.forEach(k=>{ run=(prev&&diffDays(prev,k)===1)?run+1:1; best=Math.max(best,run); prev=k; });
+  let cur=0,k=today(); if(!hasLog(k)) k=addDays(k,-1); while(hasLog(k)){cur++; k=addDays(k,-1);}
+  s.best=best; s.streak=cur; s.lost=Math.max(0,S.plan.startW-S.profile.w);
+  s.goal=S.weights.length>0 && S.plan.startW>S.plan.target && S.profile.w<=S.plan.target;
+  s.level=Math.floor(s.xp/100)+1; return s;
+}
+
+/* ---------- feedback ---------- */
+let toastT; function toast(t){ const el=$('toast'); el.textContent=t; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>el.hidden=true,2200); }
+function say(t){ $('bText').textContent=t; }
+function hop(){ const s=$('stage'); s.classList.remove('hop'); void s.offsetWidth; s.classList.add('hop'); }
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const cv=$('confetti'), x=cv.getContext('2d'); cv.width=innerWidth; cv.height=innerHeight;
+  const cols=['#ff5f95','#1fb47f','#f5a800','#3d8ef5','#8a6cf0'];
+  const P=Array.from({length:90},()=>({x:cv.width/2,y:cv.height*.45,vx:(Math.random()-.5)*13,vy:-Math.random()*13-3,r:4+Math.random()*5,c:cols[Math.random()*5|0],a:Math.random()*6}));
+  let n=0; (function f(){ x.clearRect(0,0,cv.width,cv.height); P.forEach(p=>{p.x+=p.vx; p.y+=p.vy; p.vy+=.42; p.a+=.2; x.save(); x.translate(p.x,p.y); x.rotate(p.a); x.fillStyle=p.c; x.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6); x.restore();});
+    if(++n<110) requestAnimationFrame(f); else x.clearRect(0,0,cv.width,cv.height); })();
+}
+function checkBadges(s,quiet){ let got=[]; BADGES.forEach(b=>{ if(!S.badges[b[0]]&&b[4](s)){ S.badges[b[0]]=today(); got.push(b); } });
+  if(got.length&&!quiet){ confetti(); hop(); toast('獲得徽章 '+got[0][1]+' '+got[0][2]+(got.length>1?' 等 '+got.length+' 個':'')); say('哇！拿到「'+got[0][2]+'」徽章了！'); } }
+
+/* ---------- body tab (static DOM) ---------- */
+ACTS.forEach((a,i)=>{ const b=document.createElement('button'); b.type='button'; b.id='act'+i;
+  b.innerHTML='<span class="bars">'+[0,1,2,3,4].map(k=>'<i class="'+(k<=i?'on':'')+'" style="height:'+(4+k*2.5)+'px"></i>').join('')+'</span>'+a.n;
+  b.addEventListener('click',()=>{S.profile.act=a.v; refresh();}); $('acts').appendChild(b); });
+function rePlan(){ S.plan.start=today(); S.plan.startW=S.profile.w; }
+function bindPair(rId,nId,get,set,minF,maxF){ const r=$(rId), n=$(nId);
+  r.addEventListener('input',()=>{set(+r.value); n.value=r.value; refresh();});
+  n.addEventListener('input',()=>{const v=parseFloat(n.value); if(!isNaN(v)&&v>=minF()&&v<=maxF()){set(v); refresh();}});
+  n.addEventListener('change',()=>{let v=parseFloat(n.value); if(isNaN(v)) v=get(); set(clamp(v,minF(),maxF())); refresh();}); }
+bindPair('hR','hN',()=>S.profile.h,v=>S.profile.h=v,()=>130,()=>210);
+bindPair('wR','wN',()=>S.profile.w,v=>{S.profile.w=v; rePlan();},()=>30,()=>180);
+bindPair('tR','tN',()=>S.plan.target,v=>{S.plan.target=v; rePlan();},()=>30,()=>S.profile.w);
+bindPair('wkR','wkN',()=>S.plan.weeks,v=>{S.plan.weeks=Math.round(v); rePlan();},()=>2,()=>52);
+$('splitR').addEventListener('input',e=>{S.plan.split=+e.target.value; refresh();});
+$('sexF').addEventListener('click',()=>{S.profile.sex='f'; refresh();});
+$('sexM').addEventListener('click',()=>{S.profile.sex='m'; refresh();});
+$('ageMinus').addEventListener('click',()=>{S.profile.age=clamp(S.profile.age-1,18,80); refresh();});
+$('agePlus').addEventListener('click',()=>{S.profile.age=clamp(S.profile.age+1,18,80); refresh();});
+$('ageN').addEventListener('change',e=>{const v=parseInt(e.target.value,10); S.profile.age=clamp(isNaN(v)?S.profile.age:v,18,80); refresh();});
+function paint(r){const p=(r.value-r.min)/(r.max-r.min)*100; r.style.setProperty('--p',(isFinite(p)?p:100)+'%');}
+function setIdle(el,v){ if(document.activeElement!==el) el.value=v; }
+
+let prevSt=null;
+function renderBody(c){
+  const p=S.profile, pl=S.plan;
+  $('sexF').setAttribute('aria-pressed',p.sex==='f'); $('sexM').setAttribute('aria-pressed',p.sex==='m');
+  setIdle($('ageN'),p.age); $('hR').value=p.h; setIdle($('hN'),p.h); $('wR').value=p.w; setIdle($('wN'),p.w);
+  $('tR').max=p.w; $('tN').max=p.w; $('tR').value=pl.target; setIdle($('tN'),pl.target);
+  $('wkR').value=pl.weeks; setIdle($('wkN'),pl.weeks); $('splitR').value=pl.split;
+  document.querySelectorAll('#v-body input[type=range]').forEach(paint);
+  ACTS.forEach((a,i)=>$('act'+i).setAttribute('aria-pressed',a.v===p.act));
+  $('actDesc').textContent=(ACTS.find(a=>a.v===p.act)||ACTS[0]).d;
+  document.documentElement.style.setProperty('--st',c.st.c);
+  $('bmiV').textContent=f1(c.bmi);
+  $('bmiPill').textContent=c.st.n+(c.stKey==='obese'?(c.bmi>=35?'・重度':c.bmi>=30?'・中度':'・輕度'):'');
+  $('bmiMarker').style.left=((clamp(c.bmi,14,35)-14)/21*100)+'%';
+  $('bmrV').innerHTML=fmt(c.bmr)+'<small>大卡</small>'; $('tdeeV').innerHTML=fmt(c.tdee)+'<small>大卡</small>';
+  $('idealV').innerHTML=f1(18.5*c.h2)+'–'+f1(24*c.h2)+'<small>kg</small>';
+  $('idealSub').textContent='BMI 22 的理想體重約 '+f1(22*c.h2)+' 公斤';
+  $('waterV').innerHTML=fmt(c.waterMl)+'<small>毫升</small>'; $('waterSub').textContent='大約 '+c.cups+' 杯（每杯 250ml）';
+  $('loseV').innerHTML=f1(c.lose)+'<small>kg</small>'; $('weeklyV').innerHTML=f1(c.weekly)+'<small>kg</small>'; $('defV').innerHTML=fmt(c.def)+'<small>大卡</small>';
+  $('dietK').textContent=fmt(c.dietK); $('exK').textContent=fmt(c.exK); $('intakeV').innerHTML=fmt(c.intake)+'<small>大卡</small>';
+  const rp=$('ratePill');
+  if(c.lose===0){rp.textContent='維持模式'; rp.style.background='var(--sky)';} else if(c.weekly<=0.5){rp.textContent='溫和好維持'; rp.style.background='var(--mint)';}
+  else if(c.weekly<=1){rp.textContent='標準速度'; rp.style.background='var(--sun)';} else {rp.textContent='太快了'; rp.style.background='var(--pink)';}
+  const W=[];
+  if(c.lose===0) W.push(['ok','你已經在目標體重了！每天吃約 '+fmt(c.tdee)+' 大卡就能維持。']);
+  if(pl.target<18.5*c.h2) W.push(['','目標體重低於健康範圍（'+f1(18.5*c.h2)+' 公斤以上），建議把目標往上調。']);
+  if(c.weekly>1) W.push(['','每週減超過 1 公斤太快了，容易掉肌肉、復胖。建議把期間拉長。']);
+  if(c.lose>0&&c.intake<c.bmr) W.push(['','每天吃的比基礎代謝（'+fmt(c.bmr)+' 大卡）還少。試著把滑桿往「多動」拉，或拉長期間。']);
+  if(c.lose>0&&c.intake<c.floor) W.push(['','每日攝取低於 '+fmt(c.floor)+' 大卡，營養容易不夠，請在醫師或營養師指導下進行。']);
+  if(c.lose>0&&!W.length) W.push(['ok','這個計畫很合理！穩穩來，糰糰幫你加油。']);
+  $('warns').innerHTML=W.map(x=>'<div class="warn '+x[0]+'">'+x[1]+'</div>').join('');
+  $('planNote').textContent='計畫從 '+md(pl.start)+' 的 '+f1(pl.startW)+' 公斤開始，預計 '+md(addDays(pl.start,pl.weeks*7))+' 完成，還剩 '+Math.ceil(c.remDays/7)+' 週。改動目標或期間會重新起算。';
+}
+
+/* ---------- mascot + header ---------- */
+function renderMascot(c,s){
+  $('bTag').textContent='BMI '+f1(c.bmi)+'・'+c.st.n; $('bTag').style.background=c.st.c;
+  if(prevSt!==c.stKey){ if(prevSt!==null) say(c.st.msg); prevSt=c.stKey; }
+  const sx=clamp(1+(c.bmi-22)*0.035,0.8,1.45), d=sx-1;
+  $('bodyG').style.transform='scale('+sx+',1)'; $('shadowE').style.transform='scale('+sx+',1)';
+  $('eyeL').style.transform='translateX('+(-d*24)+'px)'; $('eyeR').style.transform='translateX('+(d*24)+'px)';
+  $('blushL').style.transform='translateX('+(-d*40)+'px)'; $('blushR').style.transform='translateX('+(d*40)+'px)';
+  $('mouth').setAttribute('d',c.st.mouth);
+  $('accBand').style.display=s.level>=2?'':'none'; $('accStar').style.display=s.level>=4?'':'none';
+  const name=LV[Math.min(LV.length-1,Math.floor((s.level-1)/2))];
+  $('lvName').textContent='Lv.'+s.level+' '+name; $('xpTxt').textContent=(s.xp%100)+' / 100 XP'; $('xpBar').style.width=(s.xp%100)+'%';
+  $('chipStreak').textContent='連續 '+s.streak+' 天'; $('chipLv').textContent='Lv.'+s.level;
+}
+
+/* ---------- today ---------- */
+function ringSvg(pct,col,label){ const C=2*Math.PI*30, p=clamp(pct,0,1);
+  return '<svg viewBox="0 0 78 78"><circle cx="39" cy="39" r="30" stroke="var(--line)"/><circle class="arc" cx="39" cy="39" r="30" stroke="'+col+'" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-p))+'" transform="rotate(-90 39 39)"/><text x="39" y="45" text-anchor="middle">'+label+'</text></svg>'; }
+const cupSvg='<svg viewBox="0 0 36 44"><path class="w" d="M6 8h24l-3 30a3 3 0 0 1-3 3H12a3 3 0 0 1-3-3z"/><path d="M5 8h26l-3.200 30.500a3 3 0 0 1-3 2.500H11.200a3 3 0 0 1-3-2.500z" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+function renderToday(c){
+  const k=today(), L=peek(k), eaten=sumK(L.foods), burned=sumK(L.exs), ms=missions(k,c), exGoal=c.exK>0?c.exK:150, left=c.intake-eaten;
+  let h='<div class="rings">'
+   +'<div class="ring">'+ringSvg(eaten/c.intake,left<0?'var(--pink)':'var(--sun)',fmt(eaten))+'<span class="t">吃了（大卡）</span><span class="s">'+(left>=0?'還可以吃 '+fmt(left):'超過 '+fmt(-left))+'</span></div>'
+   +'<div class="ring">'+ringSvg(burned/exGoal,'var(--mint)',fmt(burned))+'<span class="t">運動消耗</span><span class="s">目標 '+fmt(exGoal)+' 大卡</span></div>'
+   +'<div class="ring">'+ringSvg(L.water/c.cups,'var(--sky)',L.water+'/'+c.cups)+'<span class="t">喝水（杯）</span><span class="s">'+fmt(L.water*250)+' / '+fmt(c.cups*250)+' ml</span></div></div>';
+  const doneN=ms.filter(m=>m.done).length;
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--grape)"></span>今日任務<span class="more">'+doneN+' / 4'+(doneN===4?'・全部完成 +20 XP':'')+'</span></h2><div class="list">'
+   +ms.map(m=>'<div class="mission'+(m.done?' done':'')+'"><span class="ck">'+(m.done?'✓':'')+'</span>'+m.t+'<span class="xpv">'+m.p+'</span></div>').join('')+'</div></div>';
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--sky)"></span>喝水<span class="more">點杯子記一杯 250ml</span></h2><div class="cups">';
+  for(let i=0;i<Math.max(c.cups,L.water);i++) h+='<button type="button" class="cup'+(i<L.water?' on':'')+'" data-a="cup" data-i="'+i+'" aria-label="第 '+(i+1)+' 杯">'+cupSvg+'</button>';
+  h+='</div></div>';
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--sun)"></span>飲食<span class="more">共 '+fmt(eaten)+' 大卡</span></h2><div class="list">'
+   +(L.foods.length?L.foods.map((f,i)=>'<div class="item"><span class="e">'+esc(f.e||'🍽️')+'</span>'+esc(f.n)+'<span class="k num">'+fmt(f.k)+'<small> 大卡</small></span><button class="x" data-a="delfood" data-i="'+i+'" aria-label="刪除">×</button></div>').join(''):'<div class="empty">還沒有紀錄，吃了什麼跟糰糰說一聲</div>')
+   +'</div><button class="btn sun" data-a="food">＋ 記一筆飲食</button></div>';
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--mint)"></span>運動<span class="more">共 '+sumMin(L.exs)+' 分鐘</span></h2><div class="list">'
+   +(L.exs.length?L.exs.map((x,i)=>{const e=exById(x.id); return '<div class="item"><span class="e">'+e.e+'</span>'+e.n+' '+x.min+' 分鐘<span class="k num">'+fmt(x.k)+'<small> 大卡</small></span><button class="x" data-a="delex" data-i="'+i+'" aria-label="刪除">×</button></div>';}).join(''):'<div class="empty">今天還沒動，走個 10 分鐘也算數</div>')
+   +'</div><div class="btnrow"><button class="btn mint" data-a="ex">＋ 記一筆運動</button><button class="btn ghost" data-a="go" data-tab="move">開計時器</button></div></div>';
+  const tw=weightOn(k);
+  h+='<div class="panel"><h2><span class="dot"></span>體重</h2>'+(tw?'<div class="item"><span class="e">⚖️</span>今天 <span class="k num">'+f1(tw.w)+'<small> 公斤</small></span></div>':'<div class="empty">建議固定早上起床、上完廁所後量</div>')
+   +'<button class="btn" data-a="weight">'+(tw?'修改今天的體重':'＋ 記錄今天體重')+'</button></div>';
+  $('todayDyn').innerHTML=h;
+}
+
+/* ---------- move ---------- */
+const T={run:false,t0:0,acc:0,iv:null};
+const elapsed=()=>T.acc+(T.run?Date.now()-T.t0:0);
+function tick(){ const ms=elapsed(), sec=Math.floor(ms/1000), x=exById(S.plan.ex), c=calc(), goal=Math.max(1,c.exK>0?c.exK/perMin(x):20), C=2*Math.PI*80;
+  const el=$('tmClock'); if(!el) return;
+  el.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+  $('tmSub').textContent='已燃燒 '+f1(perMin(x)*ms/60000)+' 大卡';
+  $('tmArc').setAttribute('stroke-dashoffset',C*(1-clamp(ms/60000/goal,0,1))); }
+function renderMove(c){
+  const x=exById(S.plan.ex), goal=c.exK>0?c.exK/perMin(x):20, C=2*Math.PI*80;
+  const mins=EX.map(e=>(c.exK>0?c.exK:150)/perMin(e)), mx=Math.max(...mins);
+  let h='<div class="panel"><h2><span class="dot" style="background:var(--mint)"></span>運動計時器<span class="more">'+x.e+' '+x.n+'</span></h2><div class="timer">'
+   +'<svg viewBox="0 0 190 190"><circle cx="95" cy="95" r="80" stroke="var(--card)"/><circle id="tmArc" cx="95" cy="95" r="80" stroke="var(--mint)" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'" transform="rotate(-90 95 95)"/>'
+   +'<text id="tmClock" class="clock num" x="95" y="100" text-anchor="middle">00:00</text><text id="tmSub" class="sub" x="95" y="124" text-anchor="middle">已燃燒 0.0 大卡</text></svg>'
+   +'<p class="hint">今天的目標：'+x.n+' '+fmt(goal)+' 分鐘</p>'
+   +'<div class="btnrow" style="width:100%"><button class="btn mint" data-a="tmToggle">'+(T.run?'暫停':(T.acc>0?'繼續':'開始'))+'</button><button class="btn ghost" data-a="tmDone">完成並記錄</button><button class="btn ghost" data-a="tmReset">歸零</button></div></div></div>';
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--sun)"></span>每天要動多久？</h2><p class="hint">'+(c.exK>0?'要靠運動多燒 '+fmt(c.exK)+' 大卡，各種運動需要的時間如下。':'你的計畫沒有安排運動缺口，這裡以燒掉 150 大卡為例。')+'點一項設為計時器的運動。</p><div class="exlist">'
+   +EX.map((e,i)=>'<button type="button" class="ex" data-a="pickex" data-id="'+e.id+'" aria-pressed="'+(e.id===x.id)+'"><span class="n">'+e.n+'<small>'+e.s+'</small></span><span class="bar"><i style="width:'+(mins[i]/mx*100)+'%"></i></span><span class="m num">'+fmt(mins[i])+'<small> 分/天</small></span></button>').join('')+'</div></div>';
+  h+='<div class="boba"><span class="big">🧋</span><p>'+(c.lose>0?'減 '+f1(c.lose)+' 公斤 ≈ 少喝 <span class="num">'+fmt(c.lose*7700/650)+'</span> 杯大杯全糖珍奶。':'')+'一杯珍奶約 650 大卡，要'+x.n+' <span class="num">'+fmt(650/perMin(x))+'</span> 分鐘才燒得掉。</p></div>';
+  $('v-move').innerHTML=h; tick();
+}
+
+/* ---------- log ---------- */
+function weightChart(c){
+  const pl=S.plan, W=320,H=170,L=30,R=14,Tp=18,B=24, end=addDays(pl.start,pl.weeks*7);
+  const ws=S.weights, d0=ws.length&&ws[0].d<pl.start?ws[0].d:pl.start; let d1=end; if(ws.length&&ws[ws.length-1].d>d1) d1=ws[ws.length-1].d; if(today()>d1) d1=today();
+  const span=Math.max(1,diffDays(d0,d1)), vals=ws.map(x=>x.w).concat([pl.startW,pl.target,S.profile.w]);
+  let lo=Math.min(...vals), hi=Math.max(...vals); const pad=Math.max(.8,(hi-lo)*.15); lo-=pad; hi+=pad;
+  const X=k=>L+(W-L-R)*diffDays(d0,k)/span, Y=v=>Tp+(H-Tp-B)*(hi-v)/(hi-lo);
+  let g='';
+  for(let i=0;i<=3;i++){ const v=hi-(hi-lo)*i/3, y=Y(v); g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)" stroke-dasharray="3 4"/><text x="'+(L-5)+'" y="'+(y+4)+'" text-anchor="end">'+Math.round(v)+'</text>'; }
+  g+='<path d="M'+X(pl.start)+' '+Y(pl.startW)+' L'+X(end)+' '+Y(pl.target)+'" stroke="var(--sun)" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="round" fill="none"/>';
+  g+='<circle cx="'+X(end)+'" cy="'+Y(pl.target)+'" r="6" fill="var(--sun)" stroke="var(--card)" stroke-width="2.5"/>';
+  if(ws.length){ const pts=ws.map(x=>X(x.d)+' '+Y(x.w));
+    if(ws.length>1) g+='<path d="M'+pts.join(' L')+' L'+X(ws[ws.length-1].d)+' '+(H-B)+' L'+X(ws[0].d)+' '+(H-B)+' Z" fill="var(--pink)" opacity=".12"/><path d="M'+pts.join(' L')+'" stroke="var(--pink)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+    ws.forEach((x,i)=>{ const last=i===ws.length-1; g+='<circle cx="'+X(x.d)+'" cy="'+Y(x.w)+'" r="'+(last?6.5:3.5)+'" fill="'+(last?'var(--pink)':'var(--card)')+'" stroke="'+(last?'var(--card)':'var(--pink)')+'" stroke-width="2.5"/>'; });
+    const l=ws[ws.length-1], lx=X(l.d); g+='<text class="lab" x="'+lx+'" y="'+(Y(l.w)-11)+'" text-anchor="'+(lx>W-60?'end':lx<L+30?'start':'middle')+'">'+f1(l.w)+'</text>'; }
+  g+='<text x="'+L+'" y="'+(H-6)+'">'+md(d0)+'</text><text x="'+(W-R)+'" y="'+(H-6)+'" text-anchor="end">'+md(d1)+'</text>';
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="體重變化圖">'+g+'</svg>';
+}
+function weekChart(c){
+  const W=320,H=150,L=8,R=8,Tp=20,B=22, days=[]; for(let i=6;i>=0;i--) days.push(addDays(today(),-i));
+  const E=days.map(k=>sumK(peek(k).foods)), Bn=days.map(k=>sumK(peek(k).exs)), mx=Math.max(c.intake,...E,1)*1.12;
+  const Y=v=>Tp+(H-Tp-B)*(1-v/mx), cw=(W-L-R)/7; let g='';
+  days.forEach((k,i)=>{ const cx=L+cw*i+cw/2, base=H-B;
+    g+='<rect x="'+(cx-13)+'" y="'+Y(E[i])+'" width="12" height="'+Math.max(0,base-Y(E[i]))+'" rx="5" fill="var(--sun)"/>';
+    g+='<rect x="'+(cx+1)+'" y="'+Y(Bn[i])+'" width="12" height="'+Math.max(0,base-Y(Bn[i]))+'" rx="5" fill="var(--mint)"/>';
+    g+='<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle"'+(k===today()?' class="lab"':'')+'>'+'日一二三四五六'[pd(k).getDay()]+'</text>'; });
+  const y=Y(c.intake); g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="var(--pink)" stroke-width="2" stroke-dasharray="5 5"/><text class="lab" x="'+(W-R)+'" y="'+(y-5)+'" text-anchor="end">建議 '+fmt(c.intake)+'</text>';
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="近七天熱量">'+g+'</svg>';
+}
+function renderLog(c){
+  const pl=S.plan, total=pl.startW-pl.target, done=pl.startW-S.profile.w, pct=total>0?clamp(done/total,0,1):1;
+  let h='<div class="panel"><h2><span class="dot"></span>體重變化</h2>'+weightChart(c)
+   +'<div class="legend"><span><i style="background:var(--pink)"></i>實際體重</span><span><i style="background:var(--sun)"></i>計畫路線</span></div>'
+   +'<div class="prog"><div class="meter"><i style="width:'+(pct*100)+'%"></i></div><div class="r"><span>起點 '+f1(pl.startW)+' kg</span><span>已完成 '+Math.round(pct*100)+'%</span><span>目標 '+f1(pl.target)+' kg</span></div></div>'
+   +'<button class="btn" data-a="weight">＋ 記錄體重</button>'
+   +(S.weights.length?'<div class="list">'+S.weights.slice().reverse().slice(0,8).map((x,i,a)=>{ const prev=S.weights[S.weights.length-2-i], df=prev?x.w-prev.w:0;
+      return '<div class="item"><span class="e">⚖️</span>'+md(x.d)+(prev?'<span class="hint">'+(df>0?'▲ +':df<0?'▼ ':'')+(df===0?'持平':f1(df))+'</span>':'')+'<span class="k num">'+f1(x.w)+'<small> kg</small></span><button class="x" data-a="delw" data-d="'+x.d+'" aria-label="刪除">×</button></div>'; }).join('')+'</div>'
+     :'<div class="empty">記下第一筆體重，圖表就會開始畫線</div>')+'</div>';
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--sun)"></span>近 7 天熱量</h2>'+weekChart(c)+'<div class="legend"><span><i style="background:var(--sun)"></i>吃進去</span><span><i style="background:var(--mint)"></i>運動消耗</span><span><i style="background:var(--pink)"></i>建議攝取</span></div></div>';
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth(), first=new Date(y,m,1).getDay(), n=new Date(y,m+1,0).getDate();
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--grape)"></span>'+(m+1)+' 月打卡</h2><div class="cal">'+'日一二三四五六'.split('').map(d=>'<span class="hd">'+d+'</span>').join('')+'<span style="grid-column:span '+(first||7)+(first?'':';display:none')+'"></span>';
+  for(let d=1;d<=n;d++){ const k=dk(new Date(y,m,d)), full=missions(k,c).every(x=>x.done); h+='<span class="d'+(full?' full':hasLog(k)?' has':'')+(k===today()?' today':'')+'">'+d+'</span>'; }
+  h+='</div><div class="legend"><span><i style="background:var(--sun-soft);border:1px solid var(--sun)"></i>有紀錄</span><span><i style="background:var(--mint)"></i>任務全完成</span></div></div>';
+  $('v-log').innerHTML=h;
+}
+
+/* ---------- me ---------- */
+function renderMe(c,s){
+  const got=BADGES.filter(b=>S.badges[b[0]]).length;
+  let h='<div class="panel"><h2><span class="dot" style="background:var(--grape)"></span>我的累積</h2><div class="stats">'
+   +'<div class="stat" style="background:var(--sun-soft)"><span class="v num">'+s.streak+'<small> 天</small></span><span class="k">目前連續（最長 '+s.best+' 天）</span></div>'
+   +'<div class="stat" style="background:var(--pink-soft)"><span class="v num">'+f1(s.lost)+'<small> kg</small></span><span class="k">比起點輕了</span></div>'
+   +'<div class="stat" style="background:var(--mint-soft)"><span class="v num">'+fmt(s.exMin)+'<small> 分鐘</small></span><span class="k">累計運動</span></div>'
+   +'<div class="stat" style="background:var(--sky-soft)"><span class="v num">'+fmt(s.cupsTotal)+'<small> 杯</small></span><span class="k">累計喝水</span></div></div>'
+   +'<p class="hint">記錄就能拿 XP：喝水每杯 2、飲食每筆 3、運動每分鐘 1、量體重 10、任務全完成再加 20。升到 Lv.2 和 Lv.4 糰糰會換造型。</p></div>';
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--sun)"></span>徽章<span class="more">'+got+' / '+BADGES.length+'</span></h2><div class="badges">'
+   +BADGES.map(b=>'<div class="badge'+(S.badges[b[0]]?' on':'')+'"><span class="e">'+b[1]+'</span><span class="n">'+b[2]+'</span><span class="d">'+(S.badges[b[0]]?md(S.badges[b[0]])+' 獲得':b[3])+'</span></div>').join('')+'</div></div>';
+  h+='<div class="panel"><h2><span class="dot" style="background:var(--sky)"></span>備份與還原</h2><p class="hint">紀錄只存在這個瀏覽器。換手機或清除瀏覽資料前，先下載或複製備份；到新裝置貼上再按還原。</p>'
+   +'<textarea class="field" id="bk" aria-label="備份內容" spellcheck="false"></textarea>'
+   +'<div class="btnrow"><button class="btn sky sm" data-a="bkMake">產生備份</button><button class="btn ghost sm" data-a="bkCopy">複製</button><button class="btn ghost sm" data-a="bkDown">下載檔案</button></div>'
+   +'<div class="btnrow"><button class="btn ghost sm" data-a="bkRestore">從上面文字還原</button><button class="btn ghost sm" data-a="bkFile">選備份檔還原</button></div>'
+   +'<input type="file" id="bkInput" accept=".json,application/json" hidden>'
+   +'<button class="btn ghost sm" data-a="resetAsk" style="color:var(--pink)">清除全部紀錄</button></div>';
+  const keep=$('bk')?$('bk').value:''; $('v-me').innerHTML=h; $('bk').value=keep;
+  $('bkInput').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>restore(r.result); r.readAsText(f); });
+}
+function restore(txt){ try{ const o=JSON.parse(txt); if(!adopt(o)) throw 0; prevSt=null; refresh(true); toast('已還原紀錄'); }catch(e){ toast('這不是有效的備份內容'); } }
+
+/* ---------- sheets ---------- */
+let sheetState={};
+function openSheet(html){ $('sheetBox').innerHTML=html; $('sheet').hidden=false; }
+function closeSheet(){ $('sheet').hidden=true; $('sheetBox').innerHTML=''; }
+$('sheet').addEventListener('click',e=>{ if(e.target===$('sheet')) closeSheet(); });
+const head=t=>'<h3>'+t+'<button data-a="close" aria-label="關閉">×</button></h3>';
+function sheetWeight(){ sheetState={w:(weightOn(today())||{w:S.profile.w}).w};
+  openSheet(head('今天的體重')+'<div class="bigval num"><span id="swV">'+f1(sheetState.w)+'</span><small> 公斤</small></div>'
+   +'<div class="wstep"><button class="btn ghost" data-a="sw" data-d="-1">−1</button><button class="btn ghost" data-a="sw" data-d="-0.1">−0.1</button><button class="btn ghost" data-a="sw" data-d="0.1">+0.1</button><button class="btn ghost" data-a="sw" data-d="1">+1</button></div>'
+   +'<button class="btn" data-a="swSave">儲存</button>'); }
+function sheetFood(){
+  openSheet(head('吃了什麼？')+'<p class="hint">點一下就加入今天，可以連續加。熱量是常見份量的概估。</p><div class="foods">'
+   +FOODS.map((f,i)=>'<button type="button" class="food" data-a="addfood" data-i="'+i+'"><span class="e">'+f[0]+'</span><span>'+f[1]+'<small>約 '+f[2]+' 大卡</small></span></button>').join('')+'</div>'
+   +'<p>自己輸入</p><input class="field txt" id="cfN" placeholder="食物名稱，例如：媽媽的咖哩飯" maxlength="30">'
+   +'<div class="row-top"><label for="cfK">熱量</label><div class="readout"><input id="cfK" type="number" inputmode="numeric" min="0" max="5000" placeholder="0"><span>大卡</span></div></div>'
+   +'<button class="btn sun" data-a="addcustom">加入</button>'); }
+function sheetEx(){ sheetState={id:S.plan.ex,min:30};
+  openSheet(head('做了什麼運動？')+'<div class="pick" id="sePick"></div><div class="bigval num"><span id="seMin">30</span><small> 分鐘</small></div>'
+   +'<input type="range" id="seR" min="5" max="180" step="5" value="30" style="--c:var(--mint)" aria-label="運動分鐘">'
+   +'<p class="hint" style="text-align:center" id="seK"></p><button class="btn mint" data-a="seSave">儲存</button>');
+  $('seR').addEventListener('input',e=>{sheetState.min=+e.target.value; drawEx();}); drawEx(); }
+function drawEx(){ $('sePick').innerHTML=EX.map(e=>'<button type="button" data-a="sePick" data-id="'+e.id+'" aria-pressed="'+(e.id===sheetState.id)+'">'+e.e+' '+e.n+'</button>').join('');
+  $('seMin').textContent=sheetState.min; paint($('seR')); $('seK').textContent='約消耗 '+fmt(perMin(exById(sheetState.id))*sheetState.min)+' 大卡（已扣掉休息時的消耗）'; }
+
+/* ---------- actions ---------- */
+function logWeight(w){ const k=today(), i=S.weights.findIndex(x=>x.d===k); if(i>=0) S.weights[i].w=w; else S.weights.push({d:k,w});
+  S.weights.sort((a,b)=>a.d<b.d?-1:1); if(S.weights.length===1&&S.plan.start===k) S.plan.startW=w; S.profile.w=w; if(S.plan.target>w) S.plan.target=w; }
+const A={
+  close:closeSheet,
+  go:el=>{ location.hash=el.dataset.tab; show(el.dataset.tab); },
+  cup:el=>{ const L=day(today()), i=+el.dataset.i, was=L.water; L.water=(L.water===i+1)?i:i+1; const c=calc();
+    if(L.water>was){ hop(); say(L.water>=c.cups?'喝水達標！皮膚水噹噹～':'咕嚕咕嚕～第 '+L.water+' 杯！'); } refresh(); },
+  food:sheetFood, ex:sheetEx, weight:sheetWeight,
+  addfood:el=>{ const f=FOODS[+el.dataset.i]; day(today()).foods.push({e:f[0],n:f[1],k:f[2]}); toast('已加入 '+f[1]); say(f[2]>=500?'吃飽飽！下一餐清淡一點就好。':'記下來了，'+f[1]+'！'); refresh(); },
+  addcustom:()=>{ const n=$('cfN').value.trim(), k=parseFloat($('cfK').value); if(!n){toast('請輸入食物名稱'); return;} if(isNaN(k)||k<0){toast('請輸入熱量數字'); return;}
+    day(today()).foods.push({e:'🍽️',n,k:Math.min(5000,Math.round(k))}); $('cfN').value=''; $('cfK').value=''; toast('已加入 '+n); refresh(); },
+  delfood:el=>{ day(today()).foods.splice(+el.dataset.i,1); refresh(); },
+  delex:el=>{ day(today()).exs.splice(+el.dataset.i,1); refresh(); },
+  delw:el=>{ S.weights=S.weights.filter(x=>x.d!==el.dataset.d); if(S.weights.length) S.profile.w=S.weights[S.weights.length-1].w; refresh(); },
+  sw:el=>{ sheetState.w=clamp(Math.round((sheetState.w+ +el.dataset.d)*10)/10,30,180); $('swV').textContent=f1(sheetState.w); },
+  swSave:()=>{ const before=S.profile.w; logWeight(sheetState.w); closeSheet(); hop();
+    say(sheetState.w<before?'比上次輕了 '+f1(before-sheetState.w)+' 公斤，太棒了！':sheetState.w>before?'數字會上下跳，看趨勢就好，別擔心。':'穩穩的，繼續保持！'); refresh(); },
+  sePick:el=>{ sheetState.id=el.dataset.id; drawEx(); },
+  seSave:()=>{ const x=exById(sheetState.id); day(today()).exs.push({id:x.id,min:sheetState.min,k:Math.round(perMin(x)*sheetState.min)}); closeSheet(); hop(); say(x.n+' '+sheetState.min+' 分鐘，流汗的你最帥！'); refresh(); },
+  pickex:el=>{ S.plan.ex=el.dataset.id; refresh(); },
+  tmToggle:()=>{ if(T.run){ T.acc=elapsed(); T.run=false; clearInterval(T.iv); } else { T.t0=Date.now(); T.run=true; T.iv=setInterval(tick,500); say('加油加油！糰糰陪你一起動！'); }
+    $('stage').classList.toggle('running',T.run); renderMove(calc()); },
+  tmReset:()=>{ T.run=false; T.acc=0; clearInterval(T.iv); $('stage').classList.remove('running'); renderMove(calc()); },
+  tmDone:()=>{ const ms=elapsed(); if(ms<30000){ toast('至少動 30 秒再記錄喔'); return; } const x=exById(S.plan.ex), min=Math.max(1,Math.round(ms/60000));
+    day(today()).exs.push({id:x.id,min,k:Math.round(perMin(x)*ms/60000)}); S.timerDone=(S.timerDone||0)+1; A.tmReset(); toast('已記錄 '+x.n+' '+min+' 分鐘'); say('完成 '+min+' 分鐘'+x.n+'！辛苦了～'); refresh(); },
+  bkMake:()=>{ $('bk').value=JSON.stringify(S); toast('備份已產生，可以複製或下載'); },
+  bkCopy:()=>{ if(!$('bk').value) $('bk').value=JSON.stringify(S); const t=$('bk'); try{ navigator.clipboard.writeText(t.value).then(()=>toast('已複製備份文字'),()=>{t.select(); toast('請長按文字手動複製');}); }catch(e){ t.select(); toast('請長按文字手動複製'); } },
+  bkDown:()=>{ try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'})); a.download='tuantuan-backup-'+today()+'.json'; document.body.appendChild(a); a.click(); a.remove(); toast('若沒有開始下載，請改用「複製」'); }catch(e){ toast('這裡無法下載，請改用「複製」'); } },
+  bkRestore:()=>{ const v=$('bk').value.trim(); if(!v){toast('請先貼上備份文字'); return;} restore(v); },
+  bkFile:()=>$('bkInput').click(),
+  resetAsk:()=>openSheet(head('清除全部紀錄？')+'<p>體重、飲食、運動、喝水、徽章都會刪掉，無法復原。建議先下載備份。</p><div class="btnrow"><button class="btn ghost" data-a="close">先不要</button><button class="btn" data-a="resetDo">確定清除</button></div>'),
+  resetDo:()=>{ S=fresh(); prevSt=null; closeSheet(); refresh(true); toast('已清除'); }
+};
+document.addEventListener('click',e=>{ const el=e.target.closest('[data-a]'); if(el&&A[el.dataset.a]){ A[el.dataset.a](el); } });
+let lastCheer=-1;
+$('mochiBtn').addEventListener('click',()=>{ hop(); let i; do{i=Math.random()*CHEERS.length|0;}while(i===lastCheer); lastCheer=i; say(CHEERS[i]); });
+
+/* ---------- tabs ---------- */
+const TABS=['today','body','move','log','me'];
+function show(t){ if(!TABS.includes(t)) t='today'; TABS.forEach(x=>{ $('v-'+x).hidden=x!==t; });
+  document.querySelectorAll('.tabbar a').forEach(a=>{ if(a.dataset.tab===t) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  $('stage').parentElement===$('v-today')||0; window.scrollTo(0,0); }
+document.querySelectorAll('.tabbar a').forEach(a=>a.addEventListener('click',()=>show(a.dataset.tab)));
+window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
+
+/* ---------- refresh ---------- */
+function refresh(quiet){
+  const p=S.profile, pl=S.plan; p.h=clamp(p.h,130,210); p.w=clamp(p.w,30,180); p.age=clamp(p.age,18,80); pl.weeks=clamp(Math.round(pl.weeks),2,52); pl.target=clamp(pl.target,30,p.w);
+  const c=calc(); let s=stats(c); checkBadges(s,quiet===true);
+  renderBody(c); renderMascot(c,s); renderToday(c); renderMove(c); renderLog(c); renderMe(c,s); save();
+}
+function start(data){
+  if(data&&data.profile) adopt(data);
+  const hr=new Date().getHours(), st=$('stage'); st.classList.add(hr>=5&&hr<10?'morning':hr>=10&&hr<16?'day':hr>=16&&hr<19?'sunset':'night');
+  refresh(true);
+  const c=calc(), L=peek(today());
+  say((hr<5?'夜深了，':hr<11?'早安！':hr<14?'午安！':hr<18?'下午好！':'晚安！')+(hasLog(today())?'今天已經喝了 '+L.water+' 杯水，繼續加油！':'今天還沒紀錄，先喝杯水吧～'));
+  show(location.hash.slice(1)||'today');
+}
+try{ window.claude?.hot?.snapshot(()=>S); }catch(e){}
+const hot=window.claude?.hot;
+hot&&hot.ready ? hot.ready(start) : start(hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
